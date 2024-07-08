@@ -1,0 +1,113 @@
+module Main exposing (..)
+
+import Browser
+import Element as E
+import Http
+import Json.Decode as JD
+
+-- MAIN
+
+main : Program () Model Msg
+main =
+  Browser.document
+  { init = init
+  , update = update
+  , subscriptions = subscriptions
+  , view = view
+  }
+
+  -- MODEL
+
+type alias Model = 
+  { 
+    game : Game
+  , todaysGames : List Game
+  , scheduleStatus : Status
+  }
+
+type Status = Failure | Loading | Success ( List Game )
+
+type alias Game =
+  { pk : String }
+
+init : () -> ( Model, Cmd Msg )
+init _ = 
+  ( Model ( Game "None Selected" ) 
+          [ Game "no games yet" ] 
+          Loading
+  , getTodaysGames
+  )
+
+type Msg = NewGame Game
+         | GotSchedule (Result Http.Error ( List Game ))
+
+
+  -- UPDATE
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+  case msg of
+    NewGame g ->
+      ( { model | game = g }
+      , Cmd.none 
+      )
+    GotSchedule result ->
+      case result of
+          Ok gameList ->
+            ( { model | scheduleStatus =  Success gameList
+                      , todaysGames = gameList
+                      }
+            , Cmd.none 
+            )
+          Err _ ->
+            ( { model | scheduleStatus = Failure}
+            , Cmd.none
+            )
+
+  -- SUBSCRIPTIONS
+
+subscriptions : Model -> Sub Msg
+subscriptions _ = 
+  Sub.none
+
+  -- VIEW
+
+view : Model -> Browser.Document Msg
+view model = { title = "MLB Data"
+             , body = 
+               [ E.layout [ E.padding 50 ] <|
+                  E.column [ E.spacing 30 ]
+                   ( ( E.text (case model.scheduleStatus of
+                              Loading -> "loading"
+                              Success _ -> "success"
+                              Failure -> "failure" ) ) ::
+                   ( List.map (\g ->  E.text g.pk ) model.todaysGames ) )
+                   ]
+             }
+
+-- HTTP
+
+getTodaysGames : Cmd Msg
+getTodaysGames =
+  Http.get
+    { url = "https://statsapi.mlb.com/api/v1/schedule/games/?sportId=1"
+    , expect = Http.expectJson GotSchedule scheduleDecoder
+    }
+
+
+{-
+scheduleDecoder : JD.Decoder ( List Game )
+scheduleDecoder = 
+  JD.map ( \n -> [ Game (String.fromInt n ) ] )
+  ( JD.field "totalItems" JD.int )
+-}
+
+
+scheduleDecoder : JD.Decoder ( List Game )
+scheduleDecoder = 
+  (JD.field "dates" (JD.list dateDecoder) )
+
+dateDecoder : JD.Decoder Game
+dateDecoder = 
+  JD.map Game
+  (JD.field "date" JD.string )
