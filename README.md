@@ -4,8 +4,6 @@ A simple web-app written in [elm](https://elm-lang.org/) to demonstrate how to a
 
 **Try it out:** https://djhunter.github.io/mlb-elm/
 
-* Currently win-probabilities are broken: problem with https://statsapi.mlb.com
-
 Helpful pages for endpoints:
 
 * https://github.com/toddrob99/MLB-StatsAPI/wiki/Endpoints
