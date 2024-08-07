@@ -10,6 +10,7 @@ import Dict exposing (Dict)
 import Element as E
 import Element.Border as EBorder
 import Element.Input as EI
+import Element.Font as EF
 import Html exposing (div, text)
 import Html.Attributes exposing (style)
 import Http
@@ -226,9 +227,12 @@ view model =
             E.column [ E.spacing 10
                      , E.paddingXY 50 5
                      , E.width E.fill
+                     , EF.size 32
+                     , EF.family [ EF.typeface "Helvetica", EF.sansSerif ]
                      ]
                 [ E.row [ E.spacing 5
                         , E.paddingXY 35 5
+                        , E.width E.fill
                         ]
                     [ EI.button
                         [ E.padding 3
@@ -308,7 +312,7 @@ view model =
                         , style "padding" "20px"
                         ]
                         [ C.chart
-                            [ CA.height 800
+                            [ CA.height 600
                             , CA.width 800
                             , CA.domain [ CA.lowest 0 CA.exactly, CA.highest 100 CA.exactly ]
                             , CE.onMouseMove OnHover (CE.getNearest CI.dots)
@@ -316,10 +320,10 @@ view model =
                             ]
                             (case model.gameInfo of
                                 NoInfo ->
-                                    [ C.yAxis [], C.yTicks [], C.yLabels [] ]
+                                    [ C.yAxis [], C.yTicks [] ]
 
                                 InfoFailure ->
-                                    [ C.yAxis [], C.yTicks [], C.yLabels [] ]
+                                    [ C.yAxis [], C.yTicks [] ]
 
                                 InfoSuccess info ->
                                     [ {- C.xAxis []
@@ -329,17 +333,19 @@ view model =
                                       -}
                                       C.yAxis []
                                     , C.yTicks []
-                                    , C.yLabels []
+                                    , C.yLabels [ CA.moveDown 0
+                                                , CA.fontSize 16
+                                                ]
                                     , C.series .x
                                         [ C.named ( homeTeamName model.selectedGame )
                                           <|
                                             C.interpolated .y
-                                              [ CA.monotone ]
+                                              [ CA.monotone, CA.width 2 ]
                                               [ CA.circle, CA.size 40, CA.opacity 0.2, CA.borderWidth 1 ]
                                         , C.named ( awayTeamName model.selectedGame )
                                           <|
                                             C.interpolated .z
-                                                [ CA.monotone ]
+                                                [ CA.monotone, CA.width 2 ]
                                                 [ CA.circle, CA.size 40, CA.opacity 0.2, CA.borderWidth 1 ]
                                         ]
                                         (toData info)
@@ -357,7 +363,7 @@ view model =
                                         \_ item ->
                                             [ C.tooltip item
                                                 [ CA.onTopOrBottom ]
-                                                [ style "width" "130px"
+                                                [ style "width" "200px"
                                                 , style "text-wrap" "wrap"
                                                 , style "font-size" "70%"
                                                 ]
@@ -372,7 +378,7 @@ view model =
                                             ]
                                     , C.eachDot <| \p dot ->
                                         [ C.label
-                                              [ CA.moveDown 4,  CA.fontSize 12, CA.color "black" ]
+                                              [ CA.moveDown 4,  CA.fontSize 14, CA.color "black" ]
                                               [ Svg.text (String.fromInt <| if ( CI.getName dot ) == ( homeTeamName model.selectedGame ) then
                                                                                 (CI.getData dot).hScore
                                                                             else
